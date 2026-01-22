@@ -179,30 +179,16 @@ def show_auth_page():
     col1, col2, col3 = st.columns([1, 2, 1])
     
     with col2:
-        # Botao Google (principal)
-        st.markdown("### Entrar com")
-        
-        if st.button("🔵 Continuar com Google", use_container_width=True, type="primary"):
-            with st.spinner("Redirecionando para Google..."):
-                result = db.sign_in_with_google()
-                if result["success"]:
-                    st.markdown(f'<meta http-equiv="refresh" content="0;url={result["url"]}">', unsafe_allow_html=True)
-                    st.info("Redirecionando para o Google...")
-                else:
-                    st.error(result["error"])
-        
-        st.markdown("---")
-        st.markdown("##### Ou use email e senha")
-        
-        # Toggle entre Login e Cadastro
+        # Tabs Login e Cadastro
         tab_login, tab_signup = st.tabs(["🔐 Entrar", "📝 Criar Conta"])
         
         with tab_login:
             with st.form("login_form"):
+                st.subheader("Acesse sua conta")
                 email = st.text_input("Email", placeholder="seu@email.com", key="login_email")
                 password = st.text_input("Senha", type="password", placeholder="Sua senha", key="login_password")
                 
-                if st.form_submit_button("Entrar", use_container_width=True):
+                if st.form_submit_button("Entrar", use_container_width=True, type="primary"):
                     if email and password:
                         with st.spinner("Entrando..."):
                             result = db.sign_in(email, password)
@@ -217,11 +203,12 @@ def show_auth_page():
         
         with tab_signup:
             with st.form("signup_form"):
+                st.subheader("Crie sua conta")
                 new_email = st.text_input("Email", placeholder="seu@email.com", key="signup_email")
                 new_password = st.text_input("Senha", type="password", placeholder="Minimo 6 caracteres", key="signup_password")
                 confirm_password = st.text_input("Confirmar Senha", type="password", placeholder="Repita a senha", key="signup_confirm")
                 
-                if st.form_submit_button("Criar Conta", use_container_width=True):
+                if st.form_submit_button("Criar Conta", use_container_width=True, type="primary"):
                     if new_email and new_password and confirm_password:
                         if new_password != confirm_password:
                             st.error("As senhas nao conferem")
@@ -231,7 +218,7 @@ def show_auth_page():
                             with st.spinner("Criando conta..."):
                                 result = db.sign_up(new_email, new_password)
                                 if result["success"]:
-                                    st.success("Conta criada! Agora faca login.")
+                                    st.success("Conta criada! Verifique seu email e faca login.")
                                 else:
                                     st.error(result["error"])
                     else:
@@ -656,21 +643,6 @@ def show_main_app():
 # =============================================================================
 # Roteamento Principal
 # =============================================================================
-def check_oauth_callback():
-    """Verifica se ha callback do OAuth na URL"""
-    try:
-        # Tenta obter sessao do Supabase (OAuth callback)
-        client = db.get_client()
-        if client:
-            session = client.auth.get_session()
-            if session and hasattr(session, 'user') and session.user:
-                st.session_state.user = session.user
-                return True
-    except Exception:
-        pass
-    return False
-
-
 def main():
     """Funcao principal - roteia entre login e app"""
     
@@ -679,10 +651,6 @@ def main():
         st.warning("⚠️ Modo local ativo. Configure o Supabase para ter autenticacao e dados na nuvem.")
         show_main_app_local()
         return
-    
-    # Verifica callback OAuth (login com Google)
-    if "user" not in st.session_state:
-        check_oauth_callback()
     
     # Verifica se usuario esta logado
     user = get_current_user()
