@@ -83,6 +83,22 @@ def sign_in(client: "Client", email: str, password: str) -> dict:
         return {"success": False, "error": f"Erro: {error_msg}"}
 
 
+def sign_in_with_google(client: "Client") -> dict:
+    """Inicia login com Google - retorna URL de redirecionamento"""
+    try:
+        response = client.auth.sign_in_with_oauth({
+            "provider": "google",
+            "options": {
+                "redirect_to": st.secrets.get("REDIRECT_URL", "http://localhost:8501")
+            }
+        })
+        if response and hasattr(response, 'url'):
+            return {"success": True, "url": response.url}
+        return {"success": False, "error": "Erro ao iniciar login com Google"}
+    except Exception as e:
+        return {"success": False, "error": f"Erro: {str(e)}"}
+
+
 def sign_out(client: "Client"):
     """Faz logout do usuario"""
     try:
@@ -246,6 +262,11 @@ class Database:
         if not self.is_cloud:
             return {"success": False, "error": "Modo local nao suporta autenticacao"}
         return sign_in(self.client, email, password)
+    
+    def sign_in_with_google(self) -> dict:
+        if not self.is_cloud:
+            return {"success": False, "error": "Modo local nao suporta autenticacao"}
+        return sign_in_with_google(self.client)
     
     def sign_out(self):
         if self.is_cloud:
