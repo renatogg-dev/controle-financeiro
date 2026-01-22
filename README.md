@@ -2,13 +2,20 @@
 
 Aplicacao web em Python/Streamlit para controle de receitas, despesas, metas e lembretes de contas.
 
+**Recursos:**
+- Sistema de login - cada usuario tem seus dados privados
+- Dashboard com graficos interativos
+- Cadastro de transacoes (receitas/despesas)
+- Metas de economia com acompanhamento
+- Lembretes de contas a pagar
+
 ## Requisitos
 
 - Python 3.8 ou superior
 
 ## Instalacao Local
 
-1. Crie um ambiente virtual (recomendado):
+1. Crie um ambiente virtual:
 
 ```bash
 python -m venv venv
@@ -32,30 +39,29 @@ source venv/bin/activate
 pip install -r requirements.txt
 ```
 
-## Como Executar Localmente
+## Executar Localmente
 
 ```bash
 streamlit run app.py
 ```
 
-O navegador abrira automaticamente em `http://localhost:8501`.
-
 ---
 
 ## Deploy no Streamlit Cloud (com Supabase)
 
-Para ter seus dados salvos permanentemente na nuvem, siga estes passos:
-
-### 1. Criar Banco de Dados no Supabase (Gratuito)
+### 1. Criar Projeto no Supabase
 
 1. Acesse [supabase.com](https://supabase.com) e crie uma conta
 2. Crie um novo projeto
-3. Va em **SQL Editor** e execute o seguinte script para criar as tabelas:
+3. Va em **SQL Editor** e execute o script abaixo
+
+### 2. Script SQL (NOVO - com user_id)
 
 ```sql
--- Tabela de transacoes
+-- Tabela de transacoes (com user_id)
 CREATE TABLE transactions (
     id TEXT PRIMARY KEY,
+    user_id UUID NOT NULL,
     type TEXT NOT NULL,
     amount DECIMAL(10,2) NOT NULL,
     date DATE NOT NULL,
@@ -63,91 +69,127 @@ CREATE TABLE transactions (
     description TEXT
 );
 
--- Tabela de metas
+-- Tabela de metas (com user_id)
 CREATE TABLE goals (
-    id TEXT PRIMARY KEY DEFAULT 'default',
+    id TEXT PRIMARY KEY,
+    user_id UUID NOT NULL,
     amount DECIMAL(10,2) NOT NULL DEFAULT 0
 );
 
--- Tabela de lembretes
+-- Tabela de lembretes (com user_id)
 CREATE TABLE reminders (
     id TEXT PRIMARY KEY,
+    user_id UUID NOT NULL,
     name TEXT NOT NULL,
     amount DECIMAL(10,2),
     "dueDate" DATE NOT NULL,
     notes TEXT
 );
 
--- Inserir meta padrao
-INSERT INTO goals (id, amount) VALUES ('default', 0);
+-- Indices para melhor performance
+CREATE INDEX idx_transactions_user ON transactions(user_id);
+CREATE INDEX idx_goals_user ON goals(user_id);
+CREATE INDEX idx_reminders_user ON reminders(user_id);
+
+-- Habilitar Row Level Security (RLS)
+ALTER TABLE transactions ENABLE ROW LEVEL SECURITY;
+ALTER TABLE goals ENABLE ROW LEVEL SECURITY;
+ALTER TABLE reminders ENABLE ROW LEVEL SECURITY;
+
+-- Politicas de seguranca: usuarios so veem seus proprios dados
+CREATE POLICY "Users can view own transactions" ON transactions
+    FOR SELECT USING (auth.uid() = user_id);
+
+CREATE POLICY "Users can insert own transactions" ON transactions
+    FOR INSERT WITH CHECK (auth.uid() = user_id);
+
+CREATE POLICY "Users can update own transactions" ON transactions
+    FOR UPDATE USING (auth.uid() = user_id);
+
+CREATE POLICY "Users can delete own transactions" ON transactions
+    FOR DELETE USING (auth.uid() = user_id);
+
+CREATE POLICY "Users can view own goals" ON goals
+    FOR SELECT USING (auth.uid() = user_id);
+
+CREATE POLICY "Users can insert own goals" ON goals
+    FOR INSERT WITH CHECK (auth.uid() = user_id);
+
+CREATE POLICY "Users can update own goals" ON goals
+    FOR UPDATE USING (auth.uid() = user_id);
+
+CREATE POLICY "Users can delete own goals" ON goals
+    FOR DELETE USING (auth.uid() = user_id);
+
+CREATE POLICY "Users can view own reminders" ON reminders
+    FOR SELECT USING (auth.uid() = user_id);
+
+CREATE POLICY "Users can insert own reminders" ON reminders
+    FOR INSERT WITH CHECK (auth.uid() = user_id);
+
+CREATE POLICY "Users can update own reminders" ON reminders
+    FOR UPDATE USING (auth.uid() = user_id);
+
+CREATE POLICY "Users can delete own reminders" ON reminders
+    FOR DELETE USING (auth.uid() = user_id);
 ```
 
-4. Copie suas credenciais:
-   - Va em **Settings > API**
-   - Copie a **URL** do projeto
-   - Copie a **anon public key**
+### 3. Configurar Autenticacao no Supabase
 
-### 2. Subir Projeto para o GitHub
+1. Va em **Authentication > Providers**
+2. Certifique-se que **Email** esta habilitado
+3. Em **Authentication > URL Configuration**, verifique o Site URL
 
-1. Crie um repositorio no GitHub
-2. Faca upload dos arquivos:
-   - `app.py`
-   - `database.py`
-   - `requirements.txt`
+### 4. Copiar Credenciais
 
-**Nao inclua** o arquivo `data.json` (dados locais).
+Va em **Settings > API** e copie:
+- **Project URL** → `SUPABASE_URL`
+- **anon public key** → `SUPABASE_KEY`
 
-### 3. Deploy no Streamlit Cloud
+### 5. Deploy no Streamlit Cloud
 
-1. Acesse [share.streamlit.io](https://share.streamlit.io)
-2. Clique em **New app**
-3. Selecione seu repositorio e o arquivo `app.py`
+1. Suba o codigo para o GitHub
+2. Acesse [share.streamlit.io](https://share.streamlit.io)
+3. Clique em **New app** e selecione seu repositorio
 4. Em **Advanced settings > Secrets**, adicione:
 
 ```toml
 SUPABASE_URL = "https://seu-projeto.supabase.co"
-SUPABASE_KEY = "sua-anon-key-aqui"
+SUPABASE_KEY = "sua-anon-key"
 ```
 
 5. Clique em **Deploy**
 
-Pronto! Seu app estara online com dados persistentes.
-
 ---
 
-## Como Usar
+## Como Funciona
 
-1. Selecione o mes de referencia na barra lateral
-2. Na aba **Transacoes**, adicione receitas e despesas
-3. Veja o resumo e os graficos na aba **Resumo**
-4. Defina uma meta mensal na aba **Metas**
-5. Cadastre contas na aba **Lembretes** para nao esquecer vencimentos
+### Sistema de Login
 
-## Recursos
+- Cada usuario cria sua conta com email e senha
+- Os dados sao completamente separados entre usuarios
+- Ninguem consegue ver os dados de outra pessoa
 
-- Saldo, receitas e despesas do mes
-- Graficos interativos por categoria e comparativo mensal (Plotly)
-- Cadastro de transacoes com edicao e exclusao
-- Metas de economia com barra de progresso
-- Lembretes de contas a pagar com destaque para vencidos
-- Persistencia local (JSON) ou na nuvem (Supabase)
+### Seguranca
 
-## Modos de Operacao
+- Senhas sao criptografadas pelo Supabase Auth
+- Row Level Security (RLS) garante que cada usuario so acessa seus dados
+- A chave usada (anon key) e segura para frontend
 
-| Modo | Quando | Dados |
-|------|--------|-------|
-| **Local** | Sem configurar Supabase | Salvos em `data.json` |
-| **Cloud** | Com Supabase configurado | Salvos no PostgreSQL |
-
-A sidebar mostra qual modo esta ativo.
+---
 
 ## Estrutura do Projeto
 
 ```
-controle-financeiro-sheet/
-├── app.py              # Aplicacao principal Streamlit
-├── database.py         # Modulo de persistencia (Local/Supabase)
+controle-financeiro/
+├── app.py              # Aplicacao principal com login
+├── database.py         # Modulo de persistencia com auth
 ├── requirements.txt    # Dependencias Python
-├── data.json           # Dados locais (gerado automaticamente)
-└── README.md           # Documentacao
+├── GUIA_DE_USO.md      # Manual do usuario
+└── README.md           # Este arquivo
 ```
+
+## Suporte
+
+Problemas ou sugestoes? Abra uma issue:
+https://github.com/renatogg-dev/controle-financeiro/issues
