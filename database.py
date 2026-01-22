@@ -42,36 +42,44 @@ def get_supabase_client() -> "Client | None":
 def sign_up(client: "Client", email: str, password: str) -> dict:
     """Registra novo usuario"""
     try:
-        response = client.auth.sign_up({
+        response = client.auth.sign_up(credentials={
             "email": email,
             "password": password
         })
-        if response.user:
-            return {"success": True, "user": response.user}
-        return {"success": False, "error": "Erro ao criar conta"}
+        # Verifica se criou usuario (nova API retorna AuthResponse)
+        user = getattr(response, 'user', None)
+        if user:
+            return {"success": True, "user": user}
+        return {"success": False, "error": "Erro ao criar conta. Verifique seu email."}
     except Exception as e:
         error_msg = str(e)
-        if "User already registered" in error_msg:
+        if "User already registered" in error_msg or "already been registered" in error_msg:
             return {"success": False, "error": "Este email ja esta cadastrado"}
         if "Password should be at least 6 characters" in error_msg:
             return {"success": False, "error": "A senha deve ter pelo menos 6 caracteres"}
+        if "valid email" in error_msg.lower():
+            return {"success": False, "error": "Email invalido"}
         return {"success": False, "error": f"Erro: {error_msg}"}
 
 
 def sign_in(client: "Client", email: str, password: str) -> dict:
     """Faz login do usuario"""
     try:
-        response = client.auth.sign_in_with_password({
+        response = client.auth.sign_in_with_password(credentials={
             "email": email,
             "password": password
         })
-        if response.user:
-            return {"success": True, "user": response.user, "session": response.session}
+        user = getattr(response, 'user', None)
+        session = getattr(response, 'session', None)
+        if user:
+            return {"success": True, "user": user, "session": session}
         return {"success": False, "error": "Email ou senha incorretos"}
     except Exception as e:
         error_msg = str(e)
         if "Invalid login credentials" in error_msg:
             return {"success": False, "error": "Email ou senha incorretos"}
+        if "Email not confirmed" in error_msg:
+            return {"success": False, "error": "Confirme seu email antes de fazer login"}
         return {"success": False, "error": f"Erro: {error_msg}"}
 
 
