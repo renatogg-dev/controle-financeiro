@@ -1,0 +1,73 @@
+<h2 class="font-display text-xl text-ink-900 mb-4">{% if editing %}Editar transação{% else %}Nova transação{% endif %}</h2>
+
+{% if error %}
+<p class="mb-4 rounded-md bg-expense-soft px-3 py-2 text-sm text-expense">{{ error }}</p>
+{% endif %}
+
+<form
+    class="space-y-4"
+    hx-target="#transaction-list-container"
+    hx-swap="outerHTML"
+    {% if editing %}
+    hx-put="/app/transactions/{{ editing.id }}"
+    {% else %}
+    hx-post="/app/transactions"
+    {% endif %}
+>
+    <div>
+        <label class="block text-sm font-medium text-ink-700 mb-1">Tipo</label>
+        <div class="flex gap-2">
+            <label class="flex-1 cursor-pointer rounded-md border border-surface-border px-3 py-2 text-sm text-center has-[:checked]:border-ink-900 has-[:checked]:bg-ink-900 has-[:checked]:text-white">
+                <input type="radio" name="type" value="income" class="sr-only" {% if not editing or editing.type.value == 'income' %}checked{% endif %}>
+                Receita
+            </label>
+            <label class="flex-1 cursor-pointer rounded-md border border-surface-border px-3 py-2 text-sm text-center has-[:checked]:border-ink-900 has-[:checked]:bg-ink-900 has-[:checked]:text-white">
+                <input type="radio" name="type" value="expense" class="sr-only" {% if editing and editing.type.value == 'expense' %}checked{% endif %}>
+                Despesa
+            </label>
+        </div>
+    </div>
+
+    <div>
+        <label for="amount" class="block text-sm font-medium text-ink-700 mb-1">Valor (R$)</label>
+        <input type="number" id="amount" name="amount" min="0.01" step="0.01" required
+            value="{{ editing.amount if editing else '' }}"
+            class="w-full rounded-md border border-surface-border px-3 py-2 text-sm tabular-nums focus:outline-none focus:ring-2 focus:ring-ink-900">
+    </div>
+
+    <div>
+        <label for="date" class="block text-sm font-medium text-ink-700 mb-1">Data</label>
+        <input type="date" id="date" name="date" required
+            value="{{ editing.date.isoformat() if editing else today }}"
+            class="w-full rounded-md border border-surface-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ink-900">
+    </div>
+
+    <div>
+        <label for="category_id" class="block text-sm font-medium text-ink-700 mb-1">Categoria</label>
+        <select id="category_id" name="category_id" required
+            class="w-full rounded-md border border-surface-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ink-900">
+            {% for category in categories %}
+            <option value="{{ category.id }}" {% if editing and editing.category_id == category.id %}selected{% endif %}>{{ category.name }}</option>
+            {% endfor %}
+        </select>
+    </div>
+
+    <div>
+        <label for="description" class="block text-sm font-medium text-ink-700 mb-1">Descrição</label>
+        <input type="text" id="description" name="description" maxlength="200"
+            value="{{ editing.description if editing else '' }}" placeholder="Ex: Mercado"
+            class="w-full rounded-md border border-surface-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ink-900">
+    </div>
+
+    <div class="flex gap-2 pt-1">
+        <button type="submit" class="flex-1 rounded-md bg-ink-900 px-3 py-2.5 text-sm font-medium text-white hover:bg-ink-800 transition-colors">
+            Salvar
+        </button>
+        {% if editing %}
+        <button type="button" hx-get="/app/transactions/new" hx-target="#transaction-form-container" hx-swap="innerHTML"
+            class="rounded-md border border-surface-border px-3 py-2.5 text-sm text-ink-700 hover:bg-ink-200/50 transition-colors">
+            Cancelar
+        </button>
+        {% endif %}
+    </div>
+</form>

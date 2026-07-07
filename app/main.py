@@ -7,7 +7,9 @@ from fastapi.staticfiles import StaticFiles
 from app.config import get_settings
 from app.deps import NotAuthenticatedError
 from app.routers.api import auth as api_auth
+from app.routers.api import transactions as api_transactions
 from app.routers.web import pages as web_pages
+from app.routers.web import transactions as web_transactions
 
 settings = get_settings()
 
@@ -20,7 +22,9 @@ app = FastAPI(
 app.mount("/static", StaticFiles(directory="app/static"), name="static")
 
 app.include_router(api_auth.router)
+app.include_router(api_transactions.router)
 app.include_router(web_pages.router)
+app.include_router(web_transactions.router)
 
 
 @app.exception_handler(NotAuthenticatedError)

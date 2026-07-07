@@ -1,0 +1,11 @@
+{% extends "base.html" %}
+{% block title %}Transações · Controle Financeiro{% endblock %}
+{% block content %}
+<h1 class="font-display text-2xl text-ink-900 mb-6">Transações</h1>
+<div class="grid grid-cols-1 lg:grid-cols-[320px_1fr] gap-6 items-start">
+    <div id="transaction-form-container" class="rounded-xl border border-surface-border bg-white p-5">
+        {% include "transactions/_form.html" %}
+    </div>
+    {% include "transactions/_list.html" %}
+</div>
+{% endblock %}

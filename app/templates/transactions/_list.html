@@ -1,0 +1,93 @@
+<div id="transaction-list-container">
+    <form
+        id="filters-form"
+        class="mb-4 flex flex-wrap items-end gap-3"
+        hx-get="/app/transactions/list"
+        hx-target="#transaction-list-container"
+        hx-swap="outerHTML"
+        hx-trigger="change"
+        hx-push-url="true"
+    >
+        <div>
+            <label class="block text-xs font-medium text-ink-500 mb-1">Mês</label>
+            <input type="month" name="month" value="{{ month }}"
+                class="rounded-md border border-surface-border px-3 py-1.5 text-sm">
+        </div>
+        <div>
+            <label class="block text-xs font-medium text-ink-500 mb-1">Categoria</label>
+            <select name="category_id" class="rounded-md border border-surface-border px-3 py-1.5 text-sm">
+                <option value="">Todas</option>
+                {% for category in categories %}
+                <option value="{{ category.id }}" {% if category_id == category.id %}selected{% endif %}>{{ category.name }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div>
+            <label class="block text-xs font-medium text-ink-500 mb-1">Tipo</label>
+            <select name="type" class="rounded-md border border-surface-border px-3 py-1.5 text-sm">
+                <option value="">Todos</option>
+                <option value="income" {% if type and type.value == 'income' %}selected{% endif %}>Receitas</option>
+                <option value="expense" {% if type and type.value == 'expense' %}selected{% endif %}>Despesas</option>
+            </select>
+        </div>
+        <a href="/app/transactions/export.csv"
+            class="ml-auto rounded-md border border-surface-border px-3 py-1.5 text-sm text-ink-700 hover:bg-ink-200/50 transition-colors">
+            Exportar CSV
+        </a>
+    </form>
+
+    {% if items %}
+    <div class="overflow-hidden rounded-xl border border-surface-border bg-white">
+        <table class="w-full text-sm">
+            <thead>
+                <tr class="border-b border-surface-border text-left text-xs uppercase tracking-wide text-ink-500">
+                    <th class="px-4 py-3 font-medium">Descrição</th>
+                    <th class="px-4 py-3 font-medium">Categoria</th>
+                    <th class="px-4 py-3 font-medium">Data</th>
+                    <th class="px-4 py-3 font-medium text-right">Valor</th>
+                    <th class="px-4 py-3"></th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for t in items %}
+                <tr class="border-b border-surface-border last:border-0">
+                    <td class="px-4 py-3">{{ t.description or "—" }}</td>
+                    <td class="px-4 py-3">
+                        <span class="inline-flex items-center gap-1.5 text-ink-700">
+                            <span class="h-2 w-2 rounded-full" style="background-color: {{ t.category.color }}"></span>
+                            {{ t.category.name }}
+                        </span>
+                    </td>
+                    <td class="px-4 py-3 text-ink-500">{{ t.date.strftime("%d/%m/%Y") }}</td>
+                    <td class="px-4 py-3 text-right tabular-nums font-medium {% if t.type.value == 'income' %}text-income{% else %}text-expense{% endif %}">
+                        {% if t.type.value == 'income' %}+{% else %}-{% endif %}R$ {{ "%.2f"|format(t.amount)|replace(".", ",") }}
+                    </td>
+                    <td class="px-4 py-3 text-right whitespace-nowrap">
+                        <button hx-get="/app/transactions/{{ t.id }}/edit" hx-target="#transaction-form-container" hx-swap="innerHTML"
+                            class="text-ink-500 hover:text-ink-900 mr-2" aria-label="Editar">Editar</button>
+                        <button hx-delete="/app/transactions/{{ t.id }}?month={{ month }}" hx-target="#transaction-list-container" hx-swap="outerHTML"
+                            hx-confirm="Excluir esta transação?" class="text-expense hover:text-expense/80" aria-label="Excluir">Excluir</button>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    {% set total_pages = ((total - 1) // page_size) + 1 if total > 0 else 1 %}
+    {% if total_pages > 1 %}
+    <div class="mt-4 flex items-center justify-center gap-2 text-sm">
+        {% for p in range(1, total_pages + 1) %}
+        <button hx-get="/app/transactions/list?page={{ p }}" hx-include="#filters-form" hx-target="#transaction-list-container" hx-swap="outerHTML"
+            class="h-8 w-8 rounded-md {% if p == page %}bg-ink-900 text-white{% else %}border border-surface-border text-ink-700 hover:bg-ink-200/50{% endif %}">
+            {{ p }}
+        </button>
+        {% endfor %}
+    </div>
+    {% endif %}
+    {% else %}
+    <p class="rounded-xl border border-dashed border-surface-border px-4 py-10 text-center text-sm text-ink-500">
+        Nenhuma transação neste período.
+    </p>
+    {% endif %}
+</div>

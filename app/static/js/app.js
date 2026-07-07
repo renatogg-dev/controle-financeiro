@@ -10,3 +10,16 @@ document.addEventListener("htmx:configRequest", (event) => {
         event.detail.headers["X-CSRF-Token"] = token;
     }
 });
+
+document.body.addEventListener("show-toast", (event) => {
+    const { message, kind } = event.detail;
+    const region = document.getElementById("toast-region");
+    if (!region) return;
+
+    const toast = document.createElement("div");
+    const tone = kind === "error" ? "bg-expense" : "bg-income";
+    toast.className = `rounded-md px-4 py-2.5 text-sm text-white shadow-lg ${tone}`;
+    toast.textContent = message;
+    region.appendChild(toast);
+    setTimeout(() => toast.remove(), 3000);
+});
