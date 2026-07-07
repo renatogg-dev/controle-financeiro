@@ -26,7 +26,9 @@ def _list_context(db: DbSession, user: User) -> dict:
 
 @router.get("")
 def index(
-    request: Request, db: DbSession, user: User = Depends(require_login_web)  # noqa: B008
+    request: Request,
+    db: DbSession,
+    user: User = Depends(require_login_web),  # noqa: B008
 ) -> Response:
     context = _list_context(db, user)
     context.update(
@@ -39,7 +41,9 @@ def index(
 
 @router.get("/list")
 def list_fragment(
-    request: Request, db: DbSession, user: User = Depends(require_login_web)  # noqa: B008
+    request: Request,
+    db: DbSession,
+    user: User = Depends(require_login_web),  # noqa: B008
 ) -> Response:
     return templates.TemplateResponse(request, "reminders/_list.html", _list_context(db, user))
 
@@ -55,9 +59,7 @@ def create(
     notes: str = Form(""),
 ) -> Response:
     svc.create_reminder(db, user.id, name=name, amount=amount, due_date=due_date, notes=notes)
-    response = templates.TemplateResponse(
-        request, "reminders/_list.html", _list_context(db, user)
-    )
+    response = templates.TemplateResponse(request, "reminders/_list.html", _list_context(db, user))
     response.headers.update(toast_header("Lembrete adicionado."))
     return response
 
@@ -85,8 +87,6 @@ def delete(
 ) -> Response:
     if not svc.delete_reminder(db, user.id, reminder_id):
         raise HTTPException(status_code=404, detail="Lembrete não encontrado")
-    response = templates.TemplateResponse(
-        request, "reminders/_list.html", _list_context(db, user)
-    )
+    response = templates.TemplateResponse(request, "reminders/_list.html", _list_context(db, user))
     response.headers.update(toast_header("Lembrete excluído."))
     return response

@@ -36,7 +36,8 @@ def list_transactions(
 
 @router.get("/transactions/export.csv")
 def export_transactions_csv(
-    db: DbSession, user: User = Depends(require_login_api)  # noqa: B008
+    db: DbSession,
+    user: User = Depends(require_login_api),  # noqa: B008
 ) -> StreamingResponse:
     csv_data = svc.export_transactions_csv(db, user.id)
     return StreamingResponse(
@@ -48,7 +49,9 @@ def export_transactions_csv(
 
 @router.post("/transactions", response_model=TransactionRead, status_code=status.HTTP_201_CREATED)
 def create_transaction(
-    payload: TransactionCreate, db: DbSession, user: User = Depends(require_login_api)  # noqa: B008
+    payload: TransactionCreate,
+    db: DbSession,
+    user: User = Depends(require_login_api),  # noqa: B008
 ) -> Transaction:
     transaction = svc.create_transaction(db, user.id, **payload.model_dump())
     if transaction is None:
@@ -58,7 +61,9 @@ def create_transaction(
 
 @router.get("/transactions/{transaction_id}", response_model=TransactionRead)
 def get_transaction(
-    transaction_id: int, db: DbSession, user: User = Depends(require_login_api)  # noqa: B008
+    transaction_id: int,
+    db: DbSession,
+    user: User = Depends(require_login_api),  # noqa: B008
 ) -> Transaction:
     transaction = svc.get_transaction(db, user.id, transaction_id)
     if transaction is None:
@@ -81,7 +86,9 @@ def update_transaction(
 
 @router.delete("/transactions/{transaction_id}", status_code=status.HTTP_204_NO_CONTENT)
 def delete_transaction(
-    transaction_id: int, db: DbSession, user: User = Depends(require_login_api)  # noqa: B008
+    transaction_id: int,
+    db: DbSession,
+    user: User = Depends(require_login_api),  # noqa: B008
 ) -> None:
     if not svc.delete_transaction(db, user.id, transaction_id):
         raise HTTPException(status_code=404, detail="Transaction not found")

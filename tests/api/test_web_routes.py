@@ -106,9 +106,7 @@ def test_login_form_wrong_password_rerenders_with_error(client: TestClient) -> N
     )
     client.post("/api/auth/logout")
 
-    response = client.post(
-        "/login", data={"email": "formlogin2@example.com", "password": "wrong"}
-    )
+    response = client.post("/login", data={"email": "formlogin2@example.com", "password": "wrong"})
 
     assert response.status_code == 401
     assert "incorretos" in response.text

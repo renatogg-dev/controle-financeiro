@@ -38,9 +38,7 @@ def get_status(reminder: Reminder, today: date | None = None) -> ReminderStatus:
 
 def list_reminders(db: Session, user_id: int) -> list[Reminder]:
     return list(
-        db.scalars(
-            select(Reminder).where(Reminder.user_id == user_id).order_by(Reminder.due_date)
-        )
+        db.scalars(select(Reminder).where(Reminder.user_id == user_id).order_by(Reminder.due_date))
     )
 
 

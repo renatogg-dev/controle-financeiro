@@ -80,7 +80,9 @@ def list_fragment(
 
 @router.get("/new")
 def new_form(
-    request: Request, db: DbSession, user: User = Depends(require_login_web)  # noqa: B008
+    request: Request,
+    db: DbSession,
+    user: User = Depends(require_login_web),  # noqa: B008
 ) -> Response:
     return templates.TemplateResponse(
         request,

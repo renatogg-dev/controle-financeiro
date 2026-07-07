@@ -14,7 +14,9 @@ router = APIRouter(prefix="/api/dashboard", tags=["dashboard"])
 
 @router.get("/summary", response_model=DashboardSummary)
 def summary(
-    month: str, db: DbSession, user: User = Depends(require_login_api)  # noqa: B008
+    month: str,
+    db: DbSession,
+    user: User = Depends(require_login_api),  # noqa: B008
 ) -> dict:
     return {
         "month": month,

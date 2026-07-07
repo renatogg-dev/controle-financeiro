@@ -26,7 +26,9 @@ def history(
 
 @router.get("/{month}", response_model=GoalProgress)
 def get_goal_progress(
-    month: str, db: DbSession, user: User = Depends(require_login_api)  # noqa: B008
+    month: str,
+    db: DbSession,
+    user: User = Depends(require_login_api),  # noqa: B008
 ) -> dict:
     return {"month": month, **svc.get_progress(db, user.id, month)}
 

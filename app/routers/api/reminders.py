@@ -26,14 +26,17 @@ def _to_read(reminder: Reminder) -> ReminderRead:
 
 @router.get("", response_model=list[ReminderRead])
 def list_reminders(
-    db: DbSession, user: User = Depends(require_login_api)  # noqa: B008
+    db: DbSession,
+    user: User = Depends(require_login_api),  # noqa: B008
 ) -> list[ReminderRead]:
     return [_to_read(r) for r in svc.list_reminders(db, user.id)]
 
 
 @router.post("", response_model=ReminderRead, status_code=status.HTTP_201_CREATED)
 def create_reminder(
-    payload: ReminderCreate, db: DbSession, user: User = Depends(require_login_api)  # noqa: B008
+    payload: ReminderCreate,
+    db: DbSession,
+    user: User = Depends(require_login_api),  # noqa: B008
 ) -> ReminderRead:
     reminder = svc.create_reminder(db, user.id, **payload.model_dump())
     return _to_read(reminder)
@@ -54,7 +57,9 @@ def mark_paid(
 
 @router.delete("/{reminder_id}", status_code=status.HTTP_204_NO_CONTENT)
 def delete_reminder(
-    reminder_id: int, db: DbSession, user: User = Depends(require_login_api)  # noqa: B008
+    reminder_id: int,
+    db: DbSession,
+    user: User = Depends(require_login_api),  # noqa: B008
 ) -> None:
     if not svc.delete_reminder(db, user.id, reminder_id):
         raise HTTPException(status_code=404, detail="Reminder not found")
