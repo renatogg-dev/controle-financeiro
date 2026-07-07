@@ -36,3 +36,6 @@ bin/
 # OS
 .DS_Store
 Thumbs.db
+
+# Claude Code local dev config (not shared)
+.claude/

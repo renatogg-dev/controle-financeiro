@@ -23,3 +23,63 @@ document.body.addEventListener("show-toast", (event) => {
     region.appendChild(toast);
     setTimeout(() => toast.remove(), 3000);
 });
+
+// Dashboard charts: reads JSON embedded by the server into <script> tags and
+// (re)renders Chart.js instances. Re-run on every HTMX swap that brings in
+// fresh chart data (e.g. changing the dashboard's month filter), since a
+// plain DOM swap doesn't re-execute any chart initialization on its own.
+let dashboardCharts = {};
+
+function destroyDashboardCharts() {
+    Object.values(dashboardCharts).forEach((chart) => chart.destroy());
+    dashboardCharts = {};
+}
+
+function initDashboardCharts() {
+    if (typeof Chart === "undefined") return;
+    destroyDashboardCharts();
+
+    const categoryDataEl = document.getElementById("category-breakdown-data");
+    const categoryCanvas = document.getElementById("category-chart");
+    if (categoryDataEl && categoryCanvas) {
+        const data = JSON.parse(categoryDataEl.textContent);
+        dashboardCharts.category = new Chart(categoryCanvas, {
+            type: "doughnut",
+            data: {
+                labels: data.map((d) => d.category),
+                datasets: [
+                    {
+                        data: data.map((d) => d.amount),
+                        backgroundColor: data.map((d) => d.color),
+                        borderWidth: 0,
+                    },
+                ],
+            },
+            options: { cutout: "65%", plugins: { legend: { position: "bottom" } } },
+        });
+    }
+
+    const seriesDataEl = document.getElementById("monthly-series-data");
+    const seriesCanvas = document.getElementById("series-chart");
+    if (seriesDataEl && seriesCanvas) {
+        const data = JSON.parse(seriesDataEl.textContent);
+        dashboardCharts.series = new Chart(seriesCanvas, {
+            type: "bar",
+            data: {
+                labels: data.map((d) => d.month),
+                datasets: [
+                    { label: "Receitas", data: data.map((d) => d.income), backgroundColor: "#0d9488", borderRadius: 4 },
+                    { label: "Despesas", data: data.map((d) => d.expense), backgroundColor: "#c2410c", borderRadius: 4 },
+                ],
+            },
+            options: { plugins: { legend: { position: "bottom" } }, scales: { y: { beginAtZero: true } } },
+        });
+    }
+}
+
+document.addEventListener("DOMContentLoaded", initDashboardCharts);
+document.body.addEventListener("htmx:afterSwap", (event) => {
+    if (event.detail.target.querySelector?.("#category-breakdown-data, #monthly-series-data")) {
+        initDashboardCharts();
+    }
+});

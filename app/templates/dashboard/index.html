@@ -2,5 +2,8 @@
 {% block title %}Resumo · Controle Financeiro{% endblock %}
 {% block content %}
 <h1 class="font-display text-2xl text-ink-900 mb-6">Resumo</h1>
-<p class="text-ink-500">Painel em construção.</p>
+{% include "dashboard/_content.html" %}
+{% endblock %}
+{% block scripts %}
+<script src="https://unpkg.com/chart.js@4.4.4/dist/chart.umd.js"></script>
 {% endblock %}

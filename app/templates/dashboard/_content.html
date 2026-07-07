@@ -1,0 +1,44 @@
+<div id="dashboard-content">
+    <form class="mb-6 flex items-end gap-3"
+        hx-get="/app/content" hx-target="#dashboard-content" hx-swap="outerHTML" hx-trigger="change" hx-push-url="true">
+        <div>
+            <label class="block text-xs font-medium text-ink-500 mb-1">Mês</label>
+            <input type="month" name="month" value="{{ month }}"
+                class="rounded-md border border-surface-border px-3 py-1.5 text-sm">
+        </div>
+    </form>
+
+    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
+        <div class="rounded-xl border border-surface-border bg-white p-5 border-b-4 {% if totals.balance >= 0 %}border-b-income{% else %}border-b-expense{% endif %}">
+            <p class="text-xs uppercase tracking-wide text-ink-500 mb-1">Saldo do mês</p>
+            <p class="text-2xl font-display tabular-nums {% if totals.balance >= 0 %}text-income{% else %}text-expense{% endif %}">
+                R$ {{ "%.2f"|format(totals.balance)|replace(".", ",") }}
+            </p>
+        </div>
+        <div class="rounded-xl border border-surface-border bg-white p-5 border-b-4 border-b-income">
+            <p class="text-xs uppercase tracking-wide text-ink-500 mb-1">Receitas</p>
+            <p class="text-2xl font-display tabular-nums text-ink-900">R$ {{ "%.2f"|format(totals.income)|replace(".", ",") }}</p>
+        </div>
+        <div class="rounded-xl border border-surface-border bg-white p-5 border-b-4 border-b-expense">
+            <p class="text-xs uppercase tracking-wide text-ink-500 mb-1">Despesas</p>
+            <p class="text-2xl font-display tabular-nums text-ink-900">R$ {{ "%.2f"|format(totals.expense)|replace(".", ",") }}</p>
+        </div>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div class="rounded-xl border border-surface-border bg-white p-5">
+            <h2 class="font-display text-xl text-ink-900 mb-4">Gastos por categoria</h2>
+            {% if category_breakdown %}
+            <canvas id="category-chart" height="220"></canvas>
+            {% else %}
+            <p class="text-sm text-ink-500">Nenhuma despesa registrada neste mês.</p>
+            {% endif %}
+            <script type="application/json" id="category-breakdown-data">{{ category_breakdown_json|safe }}</script>
+        </div>
+        <div class="rounded-xl border border-surface-border bg-white p-5">
+            <h2 class="font-display text-xl text-ink-900 mb-4">Receitas x despesas</h2>
+            <canvas id="series-chart" height="220"></canvas>
+            <script type="application/json" id="monthly-series-data">{{ monthly_series_json|safe }}</script>
+        </div>
+    </div>
+</div>

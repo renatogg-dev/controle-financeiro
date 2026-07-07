@@ -51,6 +51,35 @@ def get_monthly_totals(db: Session, user_id: int, month: str) -> dict[str, Decim
     return {"income": income, "expense": expense, "balance": income - expense}
 
 
+def get_category_breakdown(db: Session, user_id: int, month: str) -> list[dict]:
+    """Expense total per category for the month, excluding zero-expense categories."""
+    start, end = month_bounds(month)
+    stmt = (
+        select(Category.name, Category.color, func.sum(Transaction.amount))
+        .join(Transaction, Transaction.category_id == Category.id)
+        .where(
+            Transaction.user_id == user_id,
+            Transaction.type == TransactionType.expense,
+            Transaction.date >= start,
+            Transaction.date < end,
+        )
+        .group_by(Category.id)
+        .order_by(func.sum(Transaction.amount).desc())
+    )
+    return [
+        {"category": name, "color": color, "amount": amount}
+        for name, color, amount in db.execute(stmt)
+    ]
+
+
+def get_income_vs_expense_series(
+    db: Session, user_id: int, end_month: str, months: int = 6
+) -> list[dict]:
+    """Income/expense totals for the `months` ending at (and including) `end_month`."""
+    month_keys = [shift_month(end_month, -i) for i in range(months - 1, -1, -1)]
+    return [{"month": m, **get_monthly_totals(db, user_id, m)} for m in month_keys]
+
+
 def list_categories(db: Session, user_id: int) -> list[Category]:
     return list(
         db.scalars(select(Category).where(Category.user_id == user_id).order_by(Category.name))

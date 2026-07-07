@@ -1,15 +1,12 @@
-"""Full-page HTML routes: landing redirect, auth pages, dashboard shell."""
+"""Full-page HTML routes: landing redirect and auth pages."""
 
 from __future__ import annotations
 
-from datetime import date
-
-from fastapi import APIRouter, Depends, Form, Request
+from fastapi import APIRouter, Form, Request
 from fastapi.responses import RedirectResponse
 from starlette.responses import Response
 
-from app.deps import CurrentUser, DbSession, get_csrf_token, require_login_web
-from app.models import User
+from app.deps import CurrentUser, DbSession
 from app.security import clear_session_cookie, set_session_cookie
 from app.services.auth_service import (
     EmailAlreadyRegisteredError,
@@ -92,17 +89,3 @@ def logout_submit() -> Response:
     response = RedirectResponse(url="/login", status_code=303)
     clear_session_cookie(response)
     return response
-
-
-@router.get("/app")
-def dashboard_page(request: Request, user: User = Depends(require_login_web)) -> Response:  # noqa: B008
-    return templates.TemplateResponse(
-        request,
-        "dashboard/index.html",
-        {
-            "current_user": user,
-            "active_nav": "dashboard",
-            "csrf_token": get_csrf_token(request),
-            "current_month": date.today().strftime("%Y-%m"),
-        },
-    )

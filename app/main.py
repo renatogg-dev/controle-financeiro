@@ -7,9 +7,11 @@ from fastapi.staticfiles import StaticFiles
 from app.config import get_settings
 from app.deps import NotAuthenticatedError
 from app.routers.api import auth as api_auth
+from app.routers.api import dashboard as api_dashboard
 from app.routers.api import goals as api_goals
 from app.routers.api import reminders as api_reminders
 from app.routers.api import transactions as api_transactions
+from app.routers.web import dashboard as web_dashboard
 from app.routers.web import goals as web_goals
 from app.routers.web import pages as web_pages
 from app.routers.web import reminders as web_reminders
@@ -29,10 +31,12 @@ app.include_router(api_auth.router)
 app.include_router(api_transactions.router)
 app.include_router(api_reminders.router)
 app.include_router(api_goals.router)
+app.include_router(api_dashboard.router)
 app.include_router(web_pages.router)
 app.include_router(web_transactions.router)
 app.include_router(web_reminders.router)
 app.include_router(web_goals.router)
+app.include_router(web_dashboard.router)
 
 
 @app.exception_handler(NotAuthenticatedError)
