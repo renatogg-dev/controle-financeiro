@@ -1,0 +1,33 @@
+services:
+  app:
+    build: .
+    ports:
+      - "8000:8000"
+    environment:
+      ENV: ${ENV:-production}
+      DATABASE_URL: ${DATABASE_URL:-sqlite:////app/data/controle_financeiro.db}
+      SECRET_KEY: ${SECRET_KEY:?set a long random SECRET_KEY in .env}
+      SESSION_MAX_AGE_DAYS: ${SESSION_MAX_AGE_DAYS:-7}
+    volumes:
+      - sqlite-data:/app/data
+
+  # Optional Postgres backend: `docker compose --profile postgres up`
+  # and set DATABASE_URL=postgresql+psycopg://app:app@db:5432/app in .env
+  db:
+    image: postgres:16-alpine
+    profiles: ["postgres"]
+    environment:
+      POSTGRES_USER: app
+      POSTGRES_PASSWORD: app
+      POSTGRES_DB: app
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U app"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  sqlite-data:
+  postgres-data:
