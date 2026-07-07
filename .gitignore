@@ -1,5 +1,8 @@
-# Dados locais
+# Local data / secrets
 data.json
+*.db
+*.db-journal
+.env
 
 # Python
 __pycache__/
@@ -11,15 +14,21 @@ venv/
 ENV/
 env/
 .venv/
+*.egg-info/
+
+# Testing / coverage
+.pytest_cache/
+.coverage
+coverage.xml
+htmlcov/
+.mypy_cache/
+.ruff_cache/
 
 # IDE
 .idea/
 .vscode/
 *.swp
 *.swo
-
-# Streamlit
-.streamlit/secrets.toml
 
 # OS
 .DS_Store
