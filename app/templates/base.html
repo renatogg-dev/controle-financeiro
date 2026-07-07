@@ -12,16 +12,35 @@
     <script src="/static/js/app.js" defer></script>
 </head>
 <body class="h-full bg-surface text-ink-900 font-sans antialiased">
+    {% from "partials/_icons.html" import icon %}
+    {% set nav_items = [
+        ("dashboard", "/app", "Resumo", "home"),
+        ("transactions", "/app/transactions", "Transações", "list"),
+        ("goals", "/app/goals", "Metas", "target"),
+        ("reminders", "/app/reminders", "Lembretes", "bell"),
+    ] %}
     {% block body %}
-    <div class="flex min-h-full">
+    <div class="flex min-h-full flex-col md:flex-row">
+        <header class="md:hidden flex items-center justify-between border-b border-ink-800 bg-ink-900 px-4 py-3">
+            <a href="/app" class="flex items-center gap-2 font-display text-lg text-white">{{ icon("wallet", "w-5 h-5") }} Controle Financeiro</a>
+            {% if current_user %}
+            <form method="post" action="/logout">
+                <button type="submit" class="text-xs text-ink-300 hover:text-white">Sair</button>
+            </form>
+            {% endif %}
+        </header>
+        <nav class="md:hidden flex gap-1 overflow-x-auto border-b border-surface-border bg-white px-3 py-2 text-sm">
+            {% for key, href, label, icon_name in nav_items %}
+            <a href="{{ href }}" class="shrink-0 flex items-center gap-1.5 rounded-md px-3 py-1.5 {% if active_nav == key %}bg-ink-900 text-white{% else %}text-ink-700{% endif %}">{{ icon(icon_name, "w-3.5 h-3.5") }} {{ label }}</a>
+            {% endfor %}
+        </nav>
         <aside class="hidden md:flex w-60 shrink-0 flex-col justify-between bg-ink-900 text-ink-200 px-5 py-6">
             <div>
-                <a href="/app" class="block font-display text-xl text-white mb-8">Controle Financeiro</a>
+                <a href="/app" class="flex items-center gap-2 font-display text-xl text-white mb-8">{{ icon("wallet", "w-5 h-5") }} Controle Financeiro</a>
                 <nav class="space-y-1 text-sm">
-                    <a href="/app" class="block rounded-md px-3 py-2 hover:bg-ink-800 hover:text-white transition-colors {% if active_nav == 'dashboard' %}bg-ink-800 text-white{% endif %}">Resumo</a>
-                    <a href="/app/transactions" class="block rounded-md px-3 py-2 hover:bg-ink-800 hover:text-white transition-colors {% if active_nav == 'transactions' %}bg-ink-800 text-white{% endif %}">Transações</a>
-                    <a href="/app/goals" class="block rounded-md px-3 py-2 hover:bg-ink-800 hover:text-white transition-colors {% if active_nav == 'goals' %}bg-ink-800 text-white{% endif %}">Metas</a>
-                    <a href="/app/reminders" class="block rounded-md px-3 py-2 hover:bg-ink-800 hover:text-white transition-colors {% if active_nav == 'reminders' %}bg-ink-800 text-white{% endif %}">Lembretes</a>
+                    {% for key, href, label, icon_name in nav_items %}
+                    <a href="{{ href }}" class="flex items-center gap-2.5 rounded-md px-3 py-2 hover:bg-ink-800 hover:text-white transition-colors {% if active_nav == key %}bg-ink-800 text-white{% endif %}">{{ icon(icon_name, "w-4 h-4") }} {{ label }}</a>
+                    {% endfor %}
                 </nav>
             </div>
             <div class="text-sm">
@@ -33,7 +52,7 @@
                 {% endif %}
             </div>
         </aside>
-        <main class="flex-1 px-6 py-8 md:px-10 md:py-10">
+        <main class="flex-1 px-4 py-6 sm:px-6 sm:py-8 md:px-10 md:py-10 min-w-0">
             <div id="toast-region" class="fixed top-4 right-4 z-50 space-y-2"></div>
             {% block content %}{% endblock %}
         </main>
