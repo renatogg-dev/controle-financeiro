@@ -81,7 +81,9 @@ def test_update_and_delete_transaction(auth_client: TestClient) -> None:
 
 
 def test_user_cannot_access_another_users_transaction(client: TestClient) -> None:
-    client.post("/api/auth/register", json={"email": "alice@example.com", "password": "password123"})
+    client.post(
+        "/api/auth/register", json={"email": "alice@example.com", "password": "password123"}
+    )
     category_id = _first_category_id(client)
     transaction = client.post(
         "/api/transactions",

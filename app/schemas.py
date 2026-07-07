@@ -90,3 +90,22 @@ class DashboardSummary(BaseModel):
     totals: MonthlyTotals
     category_breakdown: list[CategoryBreakdownItem]
     monthly_series: list[MonthlySeriesItem]
+
+
+class ReminderCreate(BaseModel):
+    name: str = Field(min_length=1, max_length=100)
+    amount: Decimal | None = Field(default=None, ge=0, decimal_places=2)
+    due_date: date
+    notes: str | None = Field(default=None, max_length=200)
+
+
+class ReminderRead(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: int
+    name: str
+    amount: Decimal | None
+    due_date: date
+    notes: str | None
+    is_paid: bool
+    status: str

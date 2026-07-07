@@ -1,0 +1,46 @@
+<div id="reminder-list-container">
+    {% if reminders %}
+    <div class="space-y-2">
+        {% for r, status in reminders %}
+        <div class="flex items-center justify-between gap-4 rounded-xl border border-surface-border bg-white px-4 py-3
+            {% if status.value == 'overdue' %}border-expense/40{% endif %}">
+            <div class="min-w-0">
+                <p class="font-medium text-ink-900 truncate">
+                    {{ r.name }}
+                    {% if status.value == 'paid' %}
+                    <span class="ml-2 rounded-full bg-ink-200 px-2 py-0.5 text-xs font-normal text-ink-700">Pago</span>
+                    {% elif status.value == 'overdue' %}
+                    <span class="ml-2 rounded-full bg-expense-soft px-2 py-0.5 text-xs font-normal text-expense">Vencido</span>
+                    {% elif status.value == 'due_soon' %}
+                    <span class="ml-2 rounded-full bg-amber-100 px-2 py-0.5 text-xs font-normal text-amber-700">Vence em breve</span>
+                    {% else %}
+                    <span class="ml-2 rounded-full bg-income-soft px-2 py-0.5 text-xs font-normal text-income">Em dia</span>
+                    {% endif %}
+                </p>
+                <p class="text-sm text-ink-500">
+                    {{ r.due_date.strftime("%d/%m/%Y") }}
+                    {% if r.amount %} · R$ {{ "%.2f"|format(r.amount)|replace(".", ",") }}{% endif %}
+                    {% if r.notes %} · {{ r.notes }}{% endif %}
+                </p>
+            </div>
+            <div class="flex shrink-0 items-center gap-3 text-sm">
+                <form hx-patch="/app/reminders/{{ r.id }}/paid" hx-target="#reminder-list-container" hx-swap="outerHTML">
+                    <input type="hidden" name="is_paid" value="{{ 'false' if r.is_paid else 'true' }}">
+                    <button type="submit" class="text-ink-500 hover:text-ink-900">
+                        {% if r.is_paid %}Reabrir{% else %}Marcar como pago{% endif %}
+                    </button>
+                </form>
+                <button hx-delete="/app/reminders/{{ r.id }}" hx-target="#reminder-list-container" hx-swap="outerHTML"
+                    hx-confirm="Excluir este lembrete?" class="text-expense hover:text-expense/80">
+                    Excluir
+                </button>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <p class="rounded-xl border border-dashed border-surface-border px-4 py-10 text-center text-sm text-ink-500">
+        Nenhum lembrete cadastrado.
+    </p>
+    {% endif %}
+</div>
