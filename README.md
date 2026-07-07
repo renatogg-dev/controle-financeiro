@@ -1,195 +1,113 @@
 # Controle Financeiro
 
-Aplicacao web em Python/Streamlit para controle de receitas, despesas, metas e lembretes de contas.
+[![CI](https://github.com/renatogg-dev/controle-financeiro/actions/workflows/ci.yml/badge.svg)](https://github.com/renatogg-dev/controle-financeiro/actions/workflows/ci.yml)
+![Python](https://img.shields.io/badge/python-3.12%2B-blue)
+![License](https://img.shields.io/badge/license-MIT-informational)
 
-**Recursos:**
-- Sistema de login - cada usuario tem seus dados privados
-- Dashboard com graficos interativos
-- Cadastro de transacoes (receitas/despesas)
-- Metas de economia com acompanhamento
-- Lembretes de contas a pagar
+Personal finance tracker — transactions, monthly savings goals, bill reminders — built with FastAPI, SQLAlchemy, and HTMX. Server-rendered UI, no React or Node build step.
 
-## Requisitos
+<!-- TODO: screenshot of the dashboard -->
+<!-- TODO: short GIF of adding a transaction (no page reload) -->
 
-- Python 3.8 ou superior
+## Tech stack
 
-## Instalacao Local
+| Layer | Choice |
+|---|---|
+| API | FastAPI + Pydantic |
+| ORM / migrations | SQLAlchemy 2.0 + Alembic |
+| Database | SQLite (default) or PostgreSQL via `DATABASE_URL` |
+| Frontend | Jinja2 + HTMX + Tailwind CSS |
+| Charts | Chart.js |
+| Auth | bcrypt + JWT session cookie + CSRF |
+| Tests | pytest + httpx |
+| CI | ruff, mypy, GitHub Actions |
+| Containers | Docker (multi-stage) + docker-compose |
 
-1. Crie um ambiente virtual:
+## Architecture
+
+```mermaid
+flowchart LR
+    Browser -->|HTML + HTMX| Web["routers/web"]
+    Browser -->|JSON| Api["routers/api"]
+    Web --> Services
+    Api --> Services
+    Services --> ORM["SQLAlchemy models"]
+    ORM --> DB[(SQLite / PostgreSQL)]
+```
+
+Routers only handle HTTP (parsing, status codes, serialization). Business logic lives in `services/*.py` as plain, unit-tested functions. Both the HTMX web routes and the JSON API call the same service functions — the API isn't a wrapper around the HTML app, it's documented at `/docs` on its own.
+
+## Quickstart
+
+### Local (SQLite)
 
 ```bash
 python -m venv venv
+source venv/bin/activate  # venv\Scripts\activate on Windows
+
+pip install -e ".[dev]"
+cp .env.example .env
+
+alembic upgrade head
+uvicorn app.main:app --reload
 ```
 
-2. Ative o ambiente virtual:
+Open http://localhost:8000.
 
-**Windows:**
-```bash
-venv\Scripts\activate
-```
-
-**Linux/Mac:**
-```bash
-source venv/bin/activate
-```
-
-3. Instale as dependencias:
+### Docker
 
 ```bash
-pip install -r requirements.txt
+cp .env.example .env   # set a real SECRET_KEY
+docker compose up
 ```
 
-## Executar Localmente
+For Postgres instead of SQLite: `docker compose --profile postgres up` and set `DATABASE_URL=postgresql+psycopg://app:app@db:5432/app` in `.env`.
+
+## API docs
+
+Interactive docs generated from the same Pydantic schemas that validate requests:
+
+- Swagger UI: http://localhost:8000/docs
+- ReDoc: http://localhost:8000/redoc
+
+## Testing
 
 ```bash
-streamlit run app.py
+pytest --cov=app --cov-report=term-missing   # ~94% coverage
+ruff check .
+ruff format --check .
+mypy app
 ```
 
----
+Covers business logic (totals, category breakdowns, goal progress, reminder status), full API routes, cross-user data isolation, and CSRF enforcement. Runs in CI on every push.
 
-## Deploy no Streamlit Cloud (com Supabase)
+## Deployment
 
-### 1. Criar Projeto no Supabase
+Deploy-ready, not deployed. Needs `DATABASE_URL` (managed Postgres), `SECRET_KEY` (`python -c "import secrets; print(secrets.token_hex(32))"`), and `ENV=production`.
 
-1. Acesse [supabase.com](https://supabase.com) e crie uma conta
-2. Crie um novo projeto
-3. Va em **SQL Editor** e execute o script abaixo
-
-### 2. Script SQL (NOVO - com user_id)
-
-```sql
--- Tabela de transacoes (com user_id)
-CREATE TABLE transactions (
-    id TEXT PRIMARY KEY,
-    user_id UUID NOT NULL,
-    type TEXT NOT NULL,
-    amount DECIMAL(10,2) NOT NULL,
-    date DATE NOT NULL,
-    category TEXT NOT NULL,
-    description TEXT
-);
-
--- Tabela de metas (com user_id)
-CREATE TABLE goals (
-    id TEXT PRIMARY KEY,
-    user_id UUID NOT NULL,
-    amount DECIMAL(10,2) NOT NULL DEFAULT 0
-);
-
--- Tabela de lembretes (com user_id)
-CREATE TABLE reminders (
-    id TEXT PRIMARY KEY,
-    user_id UUID NOT NULL,
-    name TEXT NOT NULL,
-    amount DECIMAL(10,2),
-    "dueDate" DATE NOT NULL,
-    notes TEXT
-);
-
--- Indices para melhor performance
-CREATE INDEX idx_transactions_user ON transactions(user_id);
-CREATE INDEX idx_goals_user ON goals(user_id);
-CREATE INDEX idx_reminders_user ON reminders(user_id);
-
--- Habilitar Row Level Security (RLS)
-ALTER TABLE transactions ENABLE ROW LEVEL SECURITY;
-ALTER TABLE goals ENABLE ROW LEVEL SECURITY;
-ALTER TABLE reminders ENABLE ROW LEVEL SECURITY;
-
--- Politicas de seguranca: usuarios so veem seus proprios dados
-CREATE POLICY "Users can view own transactions" ON transactions
-    FOR SELECT USING (auth.uid() = user_id);
-
-CREATE POLICY "Users can insert own transactions" ON transactions
-    FOR INSERT WITH CHECK (auth.uid() = user_id);
-
-CREATE POLICY "Users can update own transactions" ON transactions
-    FOR UPDATE USING (auth.uid() = user_id);
-
-CREATE POLICY "Users can delete own transactions" ON transactions
-    FOR DELETE USING (auth.uid() = user_id);
-
-CREATE POLICY "Users can view own goals" ON goals
-    FOR SELECT USING (auth.uid() = user_id);
-
-CREATE POLICY "Users can insert own goals" ON goals
-    FOR INSERT WITH CHECK (auth.uid() = user_id);
-
-CREATE POLICY "Users can update own goals" ON goals
-    FOR UPDATE USING (auth.uid() = user_id);
-
-CREATE POLICY "Users can delete own goals" ON goals
-    FOR DELETE USING (auth.uid() = user_id);
-
-CREATE POLICY "Users can view own reminders" ON reminders
-    FOR SELECT USING (auth.uid() = user_id);
-
-CREATE POLICY "Users can insert own reminders" ON reminders
-    FOR INSERT WITH CHECK (auth.uid() = user_id);
-
-CREATE POLICY "Users can update own reminders" ON reminders
-    FOR UPDATE USING (auth.uid() = user_id);
-
-CREATE POLICY "Users can delete own reminders" ON reminders
-    FOR DELETE USING (auth.uid() = user_id);
-```
-
-### 3. Configurar Autenticacao no Supabase
-
-1. Va em **Authentication > Providers**
-2. Certifique-se que **Email** esta habilitado
-3. Em **Authentication > URL Configuration**, verifique o Site URL
-
-### 4. Copiar Credenciais
-
-Va em **Settings > API** e copie:
-- **Project URL** → `SUPABASE_URL`
-- **anon public key** → `SUPABASE_KEY`
-
-### 5. Deploy no Streamlit Cloud
-
-1. Suba o codigo para o GitHub
-2. Acesse [share.streamlit.io](https://share.streamlit.io)
-3. Clique em **New app** e selecione seu repositorio
-4. Em **Advanced settings > Secrets**, adicione:
-
-```toml
-SUPABASE_URL = "https://seu-projeto.supabase.co"
-SUPABASE_KEY = "sua-anon-key"
-```
-
-5. Clique em **Deploy**
-
----
-
-## Como Funciona
-
-### Sistema de Login
-
-- Cada usuario cria sua conta com email e senha
-- Os dados sao completamente separados entre usuarios
-- Ninguem consegue ver os dados de outra pessoa
-
-### Seguranca
-
-- Senhas sao criptografadas pelo Supabase Auth
-- Row Level Security (RLS) garante que cada usuario so acessa seus dados
-- A chave usada (anon key) e segura para frontend
-
----
-
-## Estrutura do Projeto
+## Project structure
 
 ```
-controle-financeiro/
-├── app.py              # Aplicacao principal com login
-├── database.py         # Modulo de persistencia com auth
-├── requirements.txt    # Dependencias Python
-├── GUIA_DE_USO.md      # Manual do usuario
-└── README.md           # Este arquivo
+app/
+  main.py                 FastAPI app factory
+  config.py                Settings
+  database.py               SQLAlchemy engine/session
+  models.py                  User, Category, Transaction, Goal, Reminder
+  schemas.py                  Pydantic schemas
+  security.py                  Password hashing, JWT cookie, CSRF
+  deps.py                       Shared FastAPI dependencies
+  services/                      Business logic
+  routers/
+    api/                          JSON REST
+    web/                           HTMX HTML routes
+  templates/                        Jinja2 templates
+  static/                            Compiled CSS, JS
+alembic/                              Migrations
+tests/
+  unit/                                Service-layer tests
+  api/                                  Route tests
 ```
 
-## Suporte
+## License
 
-Problemas ou sugestoes? Abra uma issue:
-https://github.com/renatogg-dev/controle-financeiro/issues
+MIT — see [LICENSE](LICENSE).
