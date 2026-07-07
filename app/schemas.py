@@ -92,6 +92,17 @@ class DashboardSummary(BaseModel):
     monthly_series: list[MonthlySeriesItem]
 
 
+class GoalSet(BaseModel):
+    target_amount: Decimal = Field(ge=0, decimal_places=2)
+
+
+class GoalProgress(BaseModel):
+    month: str
+    target: Decimal
+    current: Decimal
+    percent: Decimal
+
+
 class ReminderCreate(BaseModel):
     name: str = Field(min_length=1, max_length=100)
     amount: Decimal | None = Field(default=None, ge=0, decimal_places=2)

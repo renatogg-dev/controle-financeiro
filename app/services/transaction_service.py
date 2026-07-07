@@ -17,6 +17,14 @@ def get_month_key(d: date) -> str:
     return d.strftime("%Y-%m")
 
 
+def shift_month(month_key: str, delta: int) -> str:
+    """Return the "YYYY-MM" key `delta` months away from `month_key`."""
+    year, month = (int(part) for part in month_key.split("-"))
+    total = year * 12 + (month - 1) + delta
+    new_year, new_month = divmod(total, 12)
+    return f"{new_year:04d}-{new_month + 1:02d}"
+
+
 def month_bounds(month_key: str) -> tuple[date, date]:
     """Return [start, end) date bounds for a "YYYY-MM" key.
 
@@ -27,6 +35,20 @@ def month_bounds(month_key: str) -> tuple[date, date]:
     start = date(year, month, 1)
     end = date(year + 1, 1, 1) if month == 12 else date(year, month + 1, 1)
     return start, end
+
+
+def get_monthly_totals(db: Session, user_id: int, month: str) -> dict[str, Decimal]:
+    start, end = month_bounds(month)
+    stmt = select(Transaction.type, func.coalesce(func.sum(Transaction.amount), 0)).where(
+        Transaction.user_id == user_id, Transaction.date >= start, Transaction.date < end
+    )
+    totals: dict[TransactionType, Decimal] = {}
+    for transaction_type, total in db.execute(stmt.group_by(Transaction.type)):
+        totals[transaction_type] = total
+
+    income = totals.get(TransactionType.income, Decimal(0))
+    expense = totals.get(TransactionType.expense, Decimal(0))
+    return {"income": income, "expense": expense, "balance": income - expense}
 
 
 def list_categories(db: Session, user_id: int) -> list[Category]:

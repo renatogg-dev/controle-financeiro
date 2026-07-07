@@ -1,0 +1,76 @@
+<div id="goals-content">
+    <form class="mb-6 flex items-end gap-3"
+        hx-get="/app/goals/content" hx-target="#goals-content" hx-swap="outerHTML" hx-trigger="change" hx-push-url="true">
+        <div>
+            <label class="block text-xs font-medium text-ink-500 mb-1">Mês</label>
+            <input type="month" name="month" value="{{ month }}"
+                class="rounded-md border border-surface-border px-3 py-1.5 text-sm">
+        </div>
+    </form>
+
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
+        <div class="rounded-xl border border-surface-border bg-white p-5">
+            <h2 class="font-display text-xl text-ink-900 mb-4">Meta de economia</h2>
+            <form class="flex gap-2" hx-put="/app/goals/{{ month }}" hx-target="#goals-content" hx-swap="outerHTML">
+                <input type="number" name="target_amount" min="0" step="0.01" required
+                    value="{{ progress.target }}" placeholder="0,00"
+                    class="flex-1 rounded-md border border-surface-border px-3 py-2 text-sm tabular-nums focus:outline-none focus:ring-2 focus:ring-ink-900">
+                <button type="submit" class="rounded-md bg-ink-900 px-4 py-2 text-sm font-medium text-white hover:bg-ink-800 transition-colors">
+                    Salvar
+                </button>
+            </form>
+        </div>
+
+        <div class="rounded-xl border border-surface-border bg-white p-5">
+            <h2 class="font-display text-xl text-ink-900 mb-4">Progresso</h2>
+            {% if progress.target > 0 %}
+                {% if progress.current >= progress.target %}
+                <p class="mb-3 text-sm font-medium text-income">Meta atingida.</p>
+                {% else %}
+                <p class="mb-3 text-sm text-ink-500">Continue economizando.</p>
+                {% endif %}
+                <div class="h-2.5 w-full overflow-hidden rounded-full bg-ink-200">
+                    <div class="h-full rounded-full bg-income" style="width: {{ (progress.percent * 100)|round(0) }}%"></div>
+                </div>
+                <div class="mt-3 flex justify-between text-sm text-ink-500">
+                    <span>Atual: R$ {{ "%.2f"|format(progress.current)|replace(".", ",") }}</span>
+                    <span>Meta: R$ {{ "%.2f"|format(progress.target)|replace(".", ",") }}</span>
+                </div>
+            {% else %}
+            <p class="text-sm text-ink-500">Defina uma meta para acompanhar o progresso.</p>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="mt-6 rounded-xl border border-surface-border bg-white p-5">
+        <h2 class="font-display text-xl text-ink-900 mb-4">Histórico</h2>
+        <table class="w-full text-sm">
+            <thead>
+                <tr class="border-b border-surface-border text-left text-xs uppercase tracking-wide text-ink-500">
+                    <th class="py-2 font-medium">Mês</th>
+                    <th class="py-2 font-medium text-right">Meta</th>
+                    <th class="py-2 font-medium text-right">Realizado</th>
+                    <th class="py-2 font-medium text-right">Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for h in history %}
+                <tr class="border-b border-surface-border last:border-0">
+                    <td class="py-2">{{ h.month }}</td>
+                    <td class="py-2 text-right tabular-nums">R$ {{ "%.2f"|format(h.target)|replace(".", ",") }}</td>
+                    <td class="py-2 text-right tabular-nums">R$ {{ "%.2f"|format(h.current)|replace(".", ",") }}</td>
+                    <td class="py-2 text-right">
+                        {% if h.target > 0 and h.current >= h.target %}
+                        <span class="text-income">Atingida</span>
+                        {% elif h.target > 0 %}
+                        <span class="text-ink-500">Não atingida</span>
+                        {% else %}
+                        <span class="text-ink-300">—</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
