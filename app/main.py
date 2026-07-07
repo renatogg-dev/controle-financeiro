@@ -1,9 +1,13 @@
 """FastAPI application factory."""
 
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
+from fastapi.responses import Response
 from fastapi.staticfiles import StaticFiles
 
 from app.config import get_settings
+from app.deps import NotAuthenticatedError
+from app.routers.api import auth as api_auth
+from app.routers.web import pages as web_pages
 
 settings = get_settings()
 
@@ -14,6 +18,16 @@ app = FastAPI(
 )
 
 app.mount("/static", StaticFiles(directory="app/static"), name="static")
+
+app.include_router(api_auth.router)
+app.include_router(web_pages.router)
+
+
+@app.exception_handler(NotAuthenticatedError)
+def handle_not_authenticated(request: Request, exc: NotAuthenticatedError) -> Response:
+    if request.headers.get("HX-Request") == "true":
+        return Response(status_code=200, headers={"HX-Redirect": "/login"})
+    return Response(status_code=303, headers={"Location": "/login"})
 
 
 @app.get("/health", tags=["health"])

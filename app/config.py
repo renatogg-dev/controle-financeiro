@@ -10,7 +10,7 @@ class Settings(BaseSettings):
 
     env: str = "development"
     database_url: str = "sqlite:///./controle_financeiro.db"
-    secret_key: str = "dev-secret-change-me"
+    secret_key: str = "dev-only-secret-key-change-me-before-deploying-anywhere"
     session_max_age_days: int = 7
 
     @property

@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="pt-BR" class="h-full">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Controle Financeiro{% endblock %}</title>
+    {% if csrf_token %}<meta name="csrf-token" content="{{ csrf_token }}">{% endif %}
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Inter:wght@400;500;600;700&display=swap">
+    <link rel="stylesheet" href="/static/css/output.css">
+    <script src="https://unpkg.com/htmx.org@2.0.4/dist/htmx.min.js" defer></script>
+    <script src="/static/js/app.js" defer></script>
+</head>
+<body class="h-full bg-surface text-ink-900 font-sans antialiased">
+    {% block body %}
+    <div class="flex min-h-full">
+        <aside class="hidden md:flex w-60 shrink-0 flex-col justify-between bg-ink-900 text-ink-200 px-5 py-6">
+            <div>
+                <a href="/app" class="block font-display text-xl text-white mb-8">Controle Financeiro</a>
+                <nav class="space-y-1 text-sm">
+                    <a href="/app" class="block rounded-md px-3 py-2 hover:bg-ink-800 hover:text-white transition-colors {% if active_nav == 'dashboard' %}bg-ink-800 text-white{% endif %}">Resumo</a>
+                    <a href="/app/transactions" class="block rounded-md px-3 py-2 hover:bg-ink-800 hover:text-white transition-colors {% if active_nav == 'transactions' %}bg-ink-800 text-white{% endif %}">Transações</a>
+                    <a href="/app/goals" class="block rounded-md px-3 py-2 hover:bg-ink-800 hover:text-white transition-colors {% if active_nav == 'goals' %}bg-ink-800 text-white{% endif %}">Metas</a>
+                    <a href="/app/reminders" class="block rounded-md px-3 py-2 hover:bg-ink-800 hover:text-white transition-colors {% if active_nav == 'reminders' %}bg-ink-800 text-white{% endif %}">Lembretes</a>
+                </nav>
+            </div>
+            <div class="text-sm">
+                {% if current_user %}
+                <p class="text-ink-300 truncate mb-3">{{ current_user.email }}</p>
+                <form method="post" action="/logout">
+                    <button type="submit" class="w-full rounded-md border border-ink-700 px-3 py-2 text-left text-ink-200 hover:bg-ink-800 hover:text-white transition-colors">Sair</button>
+                </form>
+                {% endif %}
+            </div>
+        </aside>
+        <main class="flex-1 px-6 py-8 md:px-10 md:py-10">
+            <div id="toast-region" class="fixed top-4 right-4 z-50 space-y-2"></div>
+            {% block content %}{% endblock %}
+        </main>
+    </div>
+    {% endblock %}
+</body>
+</html>

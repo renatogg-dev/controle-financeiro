@@ -12,7 +12,7 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 from app.database import Base
 
 
-class TransactionType(str, enum.Enum):
+class TransactionType(enum.StrEnum):
     income = "income"
     expense = "expense"
 
@@ -23,9 +23,13 @@ class User(Base):
     id: Mapped[int] = mapped_column(primary_key=True)
     email: Mapped[str] = mapped_column(unique=True, index=True)
     hashed_password: Mapped[str]
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now()
+    )
 
-    categories: Mapped[list[Category]] = relationship(back_populates="user", cascade="all, delete-orphan")
+    categories: Mapped[list[Category]] = relationship(
+        back_populates="user", cascade="all, delete-orphan"
+    )
     transactions: Mapped[list[Transaction]] = relationship(
         back_populates="user", cascade="all, delete-orphan"
     )

@@ -30,6 +30,9 @@ htmlcov/
 *.swp
 *.swo
 
+# Tailwind standalone CLI binary (downloaded, not vendored)
+bin/
+
 # OS
 .DS_Store
 Thumbs.db
