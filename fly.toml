@@ -1,0 +1,23 @@
+app = "controle-financeiro-xl2d8g"
+primary_region = "gru"
+
+[build]
+
+[env]
+  ENV = "production"
+  DATABASE_URL = "sqlite:////app/data/controle_financeiro.db"
+
+[http_service]
+  internal_port = 8000
+  force_https = true
+  auto_stop_machines = true
+  auto_start_machines = true
+  min_machines_running = 0
+
+[mounts]
+  source = "data"
+  destination = "/app/data"
+
+[[vm]]
+  size = "shared-cpu-1x"
+  memory = "256mb"
