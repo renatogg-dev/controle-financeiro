@@ -6,6 +6,8 @@
 
 Personal finance tracker — transactions, monthly savings goals, bill reminders — built with FastAPI, SQLAlchemy, and HTMX. Server-rendered UI, no React or Node build step.
 
+**Live demo:** https://controle-financeiro-xl2d8g.fly.dev ([API docs](https://controle-financeiro-xl2d8g.fly.dev/docs))
+
 <!-- TODO: screenshot of the dashboard -->
 <!-- TODO: short GIF of adding a transaction (no page reload) -->
 
@@ -83,7 +85,7 @@ Covers business logic (totals, category breakdowns, goal progress, reminder stat
 
 ## Deployment
 
-Deploy-ready, not deployed. Needs `DATABASE_URL` (managed Postgres), `SECRET_KEY` (`python -c "import secrets; print(secrets.token_hex(32))"`), and `ENV=production`.
+Running on Fly.io (`fly.toml`): SQLite on a persistent volume, machine auto-stops when idle. To deploy your own copy anywhere else, set `DATABASE_URL` (SQLite path or managed Postgres), `SECRET_KEY` (`python -c "import secrets; print(secrets.token_hex(32))"`), and `ENV=production`.
 
 ## Project structure
 
